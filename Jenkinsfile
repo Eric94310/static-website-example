@@ -3,7 +3,6 @@ pipeline {
     environment {
         IMAGE_NAME = "static-website-example"
         IMAGE_TAG = "latest"
-
         STAGING = "eric-static-staging"
         PRODUCTION = "eric-static-prod"
     }
@@ -25,11 +24,7 @@ pipeline {
             agent any
 
             steps {
-                script {
-                    sh '''
-                        docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                    '''
-                }
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
@@ -37,19 +32,11 @@ pipeline {
             agent any
 
             steps {
-                script {
-                    sh '''
-                        docker rm -f $IMAGE_NAME || true
-
-                        docker run \
-                            --name $IMAGE_NAME \
-                            -d \
-                            -p 8080:80 \
-                            $IMAGE_NAME:$IMAGE_TAG
-
-                        sleep 5
-                    '''
-                }
+                sh '''
+                    docker rm -f $IMAGE_NAME || true
+                    docker run --name $IMAGE_NAME -d -p 8080:80 $IMAGE_NAME:$IMAGE_TAG
+                    sleep 5
+                '''
             }
         }
 
@@ -57,11 +44,7 @@ pipeline {
             agent any
 
             steps {
-                script {
-                    sh '''
-                        curl -f http://localhost:8080
-                    '''
-                }
+                sh 'curl -f http://localhost:8080'
             }
         }
 
@@ -69,12 +52,10 @@ pipeline {
             agent any
 
             steps {
-                script {
-                    sh '''
-                        docker stop $IMAGE_NAME || true
-                        docker rm $IMAGE_NAME || true
-                    '''
-                }
+                sh '''
+                    docker stop $IMAGE_NAME || true
+                    docker rm $IMAGE_NAME || true
+                '''
             }
         }
 
@@ -82,20 +63,14 @@ pipeline {
             agent any
 
             steps {
-                script {
-                    sh '''
-                        docker image inspect $IMAGE_NAME:$IMAGE_TAG
-                    '''
-                }
+                sh 'docker image inspect $IMAGE_NAME:$IMAGE_TAG'
             }
         }
 
         stage('Deploy to Staging') {
-
             when {
                 expression {
-                    env.GIT_BRANCH == 'origin/master' ||
-                    env.GIT_BRANCH == 'master'
+                    env.GIT_BRANCH == 'origin/master' || env.GIT_BRANCH == 'master'
                 }
             }
 
@@ -106,19 +81,13 @@ pipeline {
             }
 
             steps {
-                script {
-                    sh '''
-                        heroku container:login
-
-                        heroku create $STAGING || echo "Application staging déjà créée"
-
-                        heroku stack:set container -a $STAGING
-
-                        heroku container:push web -a $STAGING
-
-                        heroku container:release web -a $STAGING
-                    '''
-                }
+                sh '''
+                    heroku container:login
+                    heroku create $STAGING || echo "Application staging déjà créée"
+                    heroku stack:set container -a $STAGING
+                    heroku container:push web -a $STAGING
+                    heroku container:release web -a $STAGING
+                '''
             }
         }
 
@@ -131,11 +100,9 @@ pipeline {
         }
 
         stage('Deploy to Production') {
-
             when {
                 expression {
-                    env.GIT_BRANCH == 'origin/master' ||
-                    env.GIT_BRANCH == 'master'
+                    env.GIT_BRANCH == 'origin/master' || env.GIT_BRANCH == 'master'
                 }
             }
 
@@ -146,24 +113,18 @@ pipeline {
             }
 
             steps {
-                script {
-                    sh '''
-                        heroku container:login
-
-                        heroku create $PRODUCTION || echo "Application production déjà créée"
-
-                        heroku stack:set container -a $PRODUCTION
-
-                        heroku container:push web -a $PRODUCTION
-
-                        heroku container:release web -a $PRODUCTION
-                    '''
-                }
+                sh '''
+                    heroku container:login
+                    heroku create $PRODUCTION || echo "Application production déjà créée"
+                    heroku stack:set container -a $PRODUCTION
+                    heroku container:push web -a $PRODUCTION
+                    heroku container:release web -a $PRODUCTION
+                '''
             }
         }
     }
 
-   
+    post {
         success {
             echo 'Pipeline exécutée avec succès'
         }
