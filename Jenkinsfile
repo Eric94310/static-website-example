@@ -163,10 +163,7 @@ pipeline {
         }
     }
 
-    post {
-          .......
-    }
-
+   
         success {
             echo 'Pipeline exécutée avec succès'
         }
