@@ -33,9 +33,15 @@ pipeline {
 
             steps {
                 sh '''
-                    docker rm -f $IMAGE_NAME || true
-                    docker run --name $IMAGE_NAME -d -p 8084:80 $IMAGE_NAME:$IMAGE_TAG
-                    sleep 5
+                     docker rm -f $IMAGE_NAME || true
+                     docker run \
+                      --name $IMAGE_NAME \
+                      -d \
+                      -e PORT=80 \
+                      -p 8084:80 \
+                      $IMAGE_NAME:$IMAGE_TAG
+                     
+                     sleep 5
                 '''
             }
         }
