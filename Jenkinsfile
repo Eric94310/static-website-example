@@ -44,7 +44,7 @@ pipeline {
             agent any
 
             steps {
-                sh 'curl -f http://localhost:8084'
+                sh 'curl -f http://172.17.0.1:8084'
             }
         }
 
